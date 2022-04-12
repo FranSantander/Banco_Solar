@@ -32,7 +32,7 @@ const getUsuarios = async () => {
   }
 };
 const editUsuario = async (usuario, id) => {
-  //console.log(usuario, id);
+  console.log(usuario, id);
   const values = Object.values(usuario);
   const consulta = {
     text: `UPDATE usuarios SET nombre = $2, balance = $3 WHERE id = $1 RETURNING *`,
@@ -45,5 +45,13 @@ const editUsuario = async (usuario, id) => {
     console.log(error.code);
   }
 };
+const eliminarUsuario = async (id) => {
+    try {
+        const result = await pool.query(`DELETE FROM usuarios WHERE id = ${id}`);
+        return result.rows; 
+    } catch (error) {
+        console.log(error.code);
+    }
+}
 
-module.exports = { guardarUsuario, getUsuarios, editUsuario };
+module.exports = { guardarUsuario, getUsuarios, editUsuario, eliminarUsuario };

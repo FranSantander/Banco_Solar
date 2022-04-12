@@ -1,6 +1,6 @@
 const http = require("http");
 const fs = require("fs");
-const { guardarUsuario, getUsuarios, editUsuario } = require("./consultas");
+const { guardarUsuario, getUsuarios, editUsuario, eliminarUsuario } = require("./consultas");
 const url = require("url");
 
 http
@@ -64,5 +64,16 @@ http
         }
       });
     }
+    //Ruta /usuario DELETE: Recibe el id de un usuario registrado y lo elimina .
+    if (req.url.startsWith("/usuario?id") && req.method == "DELETE") {
+        try {
+          let { id } = url.parse(req.url, true).query;
+          await eliminarUsuario(id);
+          res.end("CUsuario eliminado");
+        } catch (error) {
+          res.statusCode = 500;
+          res.end("Ocurrió un problema en el servidor" + error);
+        }
+      }
   })
   .listen(3000, console.log("Servidor en el puerto 3000 encendido"));
