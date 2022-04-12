@@ -32,10 +32,10 @@ const getUsuarios = async () => {
   }
 };
 const editUsuario = async (usuario, id) => {
-  console.log(usuario, id);
+  //console.log(usuario, id);
   const values = Object.values(usuario);
   const consulta = {
-    text: `UPDATE usuarios SET nombre = $2, balance = $3 WHERE id = ${1} RETURNING *`,
+    text: `UPDATE usuarios SET nombre = $2, balance = $3 WHERE id = $1 RETURNING *`,
     values,
   };
   try {
