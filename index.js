@@ -6,6 +6,7 @@ const {
   editUsuario,
   eliminarUsuario,
   registrarTransferencias,
+  getTransferencias
 } = require("./consultas");
 const url = require("url");
 
@@ -99,5 +100,16 @@ http
         }
       });
     }
+// Ruta /transferencias GET: Devuelve todas las transferencias almacenadas en la base de datos en formato de arreglo.
+if (req.url == "/transferencia" && req.method == "GET") {
+  try {
+    const transferencias= await getTransferencias();
+    res.end(JSON.stringify(transferencias));
+  } catch (error) {
+    res.statusCode = 500;
+    res.end("Ocurrió un problema en el servidor" + error);
+  }
+}
+
   })
   .listen(3000, console.log("Servidor en el puerto 3000 encendido"));

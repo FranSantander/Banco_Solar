@@ -56,21 +56,24 @@ const eliminarUsuario = async (id) => {
 const registrarTransferencias = async (transferencia) => {
   console.log(transferencia);
   const values = Object.values(transferencia);
+  const nombreEmisor = values[0];
+  const nombreReceptor = values[1];
+  const monto = values[2];
 
   const actualizarBalanceEmisor = {
     
-    text: "UPDATE usuarios SET balance = balance - $2 WHERE id = $1 RETURNING *;",
-    values: [values[0], Number(values[1])],
+    text: 'UPDATE usuarios SET balance = balance - $2 where id = (select id from usuarios where nombre = $1);',
+        values: [nombreEmisor, Number(monto)]
     
   };
 
   const actualizarBalanceReceptor = {
-    text: "UPDATE usuarios SET balance = balance + $2 WHERE id = $1 RETURNING *;",
-    values: [values[1], Number(values[2])],
+    text: 'UPDATE usuarios SET balance = balance + $2 where id = (select id from usuarios where nombre = $1);',
+    values: [nombreReceptor, Number(monto)]
   };
   const registroTransferencia = {
-    text: "INSERT INTO transferencias (emisor, receptor, monto, fecha) values ($1, $2, $3, $4);",
-    values,
+    text: "INSERT INTO transferencias (emisor,receptor,monto,fecha) values ((select id from usuarios where nombre = $1), (select id from usuarios where nombre = $2), $3, current_timestamp)",
+    values:[nombreEmisor,nombreReceptor,Number(monto)],
   };
 
   try {
@@ -78,9 +81,9 @@ const registrarTransferencias = async (transferencia) => {
     await pool.query(registroTransferencia);
     console.log("Se esta realizando la transferencia");
     await pool.query(actualizarBalanceEmisor);
-    console.log("Actualizando cuenta del emisor");
+    console.log("Cuenta del emisor actualizada");
     await pool.query(actualizarBalanceReceptor);
-    console.log("Actualizando cuenta del receptor");
+    console.log("Cuenta del receptor actualizada");
     await pool.query("COMMIT");
     return true;
   } catch (error) {
@@ -93,6 +96,20 @@ const registrarTransferencias = async (transferencia) => {
     return error;
   }
 };
+const getTransferencias = async () =>{
+  const consulta = {
+    text: `SELECT fecha,(SELECT nombre AS emisor FROM usuarios WHERE usuarios.id = transferencias.emisor),(SELECT nombre AS receptor FROM usuarios WHERE usuarios.id = transferencias.receptor), monto FROM transferencias INNER JOIN usuarios ON transferencias.emisor = usuarios.id`,
+    rowMode: "array",
+  };
+  try {
+     const result = await pool.query(consulta);
+  return result.rows; 
+  } catch (error) {
+    console.log("Error al hacer la consulta de la transferencia", "Error de código: ",error.code);
+    return error
+  }
+
+}
 
 module.exports = {
   guardarUsuario,
@@ -100,4 +117,5 @@ module.exports = {
   editUsuario,
   eliminarUsuario,
   registrarTransferencias,
+  getTransferencias
 };
