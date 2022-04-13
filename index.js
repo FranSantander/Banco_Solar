@@ -1,6 +1,12 @@
 const http = require("http");
 const fs = require("fs");
-const { guardarUsuario, getUsuarios, editUsuario, eliminarUsuario } = require("./consultas");
+const {
+  guardarUsuario,
+  getUsuarios,
+  editUsuario,
+  eliminarUsuario,
+  registrarTransferencias,
+} = require("./consultas");
 const url = require("url");
 
 http
@@ -47,8 +53,8 @@ http
     }
     //Ruta /usuario PUT: Recibe los datos modificados de un usuario registrado y los actualiza.
     if (req.url.startsWith("/usuario?id") && req.method == "PUT") {
-        const { id } = url.parse(req.url, true).query
-        let body = "";
+      const { id } = url.parse(req.url, true).query;
+      let body = "";
       req.on("data", (chunk) => {
         body += chunk;
       });
@@ -66,14 +72,32 @@ http
     }
     //Ruta /usuario DELETE: Recibe el id de un usuario registrado y lo elimina .
     if (req.url.startsWith("/usuario?id") && req.method == "DELETE") {
+      try {
+        let { id } = url.parse(req.url, true).query;
+        await eliminarUsuario(id);
+        res.end("CUsuario eliminado");
+      } catch (error) {
+        res.statusCode = 500;
+        res.end("Ocurrió un problema en el servidor" + error);
+      }
+    }
+    //Ruta /transferencia POST: Recibe los datos para realizar una nueva transferencia. Se debe ocupar una transacción SQL en la consulta a la base de datos.
+    if (req.url == "/transferencia" && req.method == "POST") {
+      let body = "";
+      req.on("data", (chunk) => {
+        body = chunk.toString();
+      });
+      req.on("end", async () => {
+        const transferencia = JSON.parse(body);
         try {
-          let { id } = url.parse(req.url, true).query;
-          await eliminarUsuario(id);
-          res.end("CUsuario eliminado");
+          const result = await registrarTransferencias(transferencia);
+          res.statusCode = 201;
+          res.end(JSON.stringify(result));
         } catch (error) {
           res.statusCode = 500;
           res.end("Ocurrió un problema en el servidor" + error);
         }
-      }
+      });
+    }
   })
   .listen(3000, console.log("Servidor en el puerto 3000 encendido"));
