@@ -89,7 +89,7 @@ http
         body = chunk.toString();
       });
       req.on("end", async () => {
-        const transferencia = JSON.parse(body);
+        const transferencia = Object.values(JSON.parse(body));
         try {
           const result = await registrarTransferencias(transferencia);
           res.statusCode = 201;
